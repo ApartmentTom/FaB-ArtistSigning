@@ -211,7 +211,7 @@ async function run() {
       const cards = parseDeckText(deck.text);
       for (const { name, qty } of cards) {
         const entry = db[name.toLowerCase()];
-        if (!entry) { notInDb.add(name); continue; }
+        if (!entry || !entry.byArtist) { notInDb.add(name); continue; }
         const matched = Object.entries(entry.byArtist).filter(([a]) =>
           artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
         );
@@ -285,7 +285,7 @@ function render(output, noMatches, totalCards, notInDb, db, artists, decks) {
     const cards = parseDeckText(deck.text);
     const lines = cards.map(({ name }) => {
       const entry = db[name.toLowerCase()];
-      if (!entry) return `✗ "${name}" — not in database`;
+      if (!entry || !entry.byArtist) return `✗ "${name}" — not in database`;
       const artistsLower = artists.map(a => a.toLowerCase());
       const matched = entry.artists.filter(a =>
         artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
