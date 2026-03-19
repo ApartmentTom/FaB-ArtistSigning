@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAB Signing Prep</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f3; color: #1a1a18; min-height: 100vh; padding: 2rem 1rem; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.75rem; }
+  label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
+  .hint { font-size: 12px; color: #999; margin-top: 4px; }
+  input[type=text], textarea { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #d0d0cc; border-radius: 8px; background: #fff; outline: none; font-family: inherit; }
+  input[type=text]:focus, textarea:focus { border-color: #888; }
+  textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+  .field { margin-bottom: 1.25rem; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill { font-size: 12px; padding: 3px 10px; background: #ebebeb; color: #555; border-radius: 20px; }
+  .deck-box { border: 1px solid #e0e0dc; border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; background: #fff; }
+  .deck-box-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .deck-box-header input[type=text] { flex: 1; font-size: 13px; padding: 5px 10px; }
+  .remove-btn { padding: 4px 10px; font-size: 13px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: #999; flex-shrink: 0; }
+  .remove-btn:hover { background: #fdecea; color: #a33; border-color: #f0c0bc; }
+  .add-btn { font-size: 13px; padding: 6px 14px; border: 1px dashed #bbb; border-radius: 8px; background: transparent; cursor: pointer; color: #666; margin-bottom: 1.25rem; }
+  .add-btn:hover { background: #f0f0ee; }
+  button#runBtn { padding: 8px 22px; font-size: 14px; border: 1px solid #bbb; border-radius: 8px; background: #fff; cursor: pointer; }
+  button#runBtn:hover { background: #f0f0ee; }
+  button#runBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status { margin-top: 1rem; font-size: 13px; color: #888; min-height: 18px; }
+  .error { margin-top: 1rem; padding: 10px 14px; background: #fdecea; color: #a33; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+  .results { margin-top: 1.5rem; }
+  .summary { font-size: 13px; color: #666; margin-bottom: 1rem; }
+  .artist-card { background: #fff; border: 1px solid #e0e0dc; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
+  .artist-name { font-weight: 500; font-size: 15px; margin-bottom: 10px; }
+  .deck-section { margin-bottom: 10px; }
+  .deck-section:last-child { margin-bottom: 0; }
+  .deck-label { font-size: 12px; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .card-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 14px; padding: 4px 0; border-top: 1px solid #f2f2f0; gap: 8px; }
+  .card-row:first-of-type { border-top: none; }
+  .card-name-col { display: flex; flex-direction: column; gap: 3px; }
+  .print-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .print-tag { font-size: 11px; background: #eef0f8; color: #557; padding: 1px 7px; border-radius: 4px; }
+  .qty { font-size: 12px; background: #f0f0ee; color: #666; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+  .no-match { font-size: 12px; color: #aaa; margin-top: 0.5rem; }
+  .none-found { font-size: 14px; color: #888; }
+  details { margin-top: 1rem; }
+  summary { font-size: 12px; color: #aaa; cursor: pointer; }
+  .debug-box { font-size: 11px; color: #888; background: #f9f9f7; border: 1px solid #e8e8e4; border-radius: 6px; padding: 8px 10px; margin-top: 6px; line-height: 1.7; max-height: 240px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FAB Signing Prep</h1>
+
+  <div class="field">
+    <label>Artist cards URL (Fabrary)</label>
+    <input type="text" id="artistUrl" placeholder='https://fabrary.net/cards?query=art%3A"Artist One"%2C"Artist Two"' oninput="detectArtists()" />
+    <div class="hint">Artists are detected automatically from the URL.</div>
+    <div class="pills" id="artistPills"></div>
+  </div>
+
+  <label style="margin-bottom:8px;">Decklists — paste from Fabrary export</label>
+  <div id="deckList"></div>
+  <button class="add-btn" onclick="addDeck()">+ Add deck</button>
+
+  <br>
+  <button id="runBtn" onclick="run()">Find signable cards</button>
+  <div class="status" id="status"></div>
+  <div id="error"></div>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+const CARD_JSON = "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/develop/json/english/card.json";
+let cardDb = null;
+let deckCount = 0;
+
+function detectArtists() {
+  const url = document.getElementById("artistUrl").value;
+  document.getElementById("artistPills").innerHTML =
+    parseArtistsFromUrl(url).map(a => `<span class="pill">${a}</span>`).join("");
+}
+
+function parseArtistsFromUrl(url) {
+  try {
+    const match = url.match(/art(?::|%3A)(.+?)(?:&|$)/i);
+    if (!match) return [];
+    const raw = decodeURIComponent(match[1]).replace(/\+/g, " ");
+    return raw.split(",").map(a => a.replace(/"/g, "").trim()).filter(Boolean);
+  } catch { return []; }
+}
+
+function getDeckName(text) {
+  const m = text.match(/^Name:\s*(.+)$/m);
+  return m ? m[1].trim() : "";
+}
+
+function addDeck(text = "") {
+  deckCount++;
+  const id = deckCount;
+  const div = document.createElement("div");
+  div.className = "deck-box";
+  div.id = `deck-${id}`;
+  div.innerHTML = `
+    <div class="deck-box-header">
+      <input type="text" placeholder="Deck name (auto-filled from export)" id="deckname-${id}" />
+      <button class="remove-btn" onclick="removeDeck(${id})">Remove</button>
+    </div>
+    <textarea id="decktext-${id}" placeholder="Paste Fabrary export here..." oninput="autoName(${id})">${text}</textarea>`;
+  document.getElementById("deckList").appendChild(div);
+  if (text) autoName(id);
+}
+
+function autoName(id) {
+  const text = document.getElementById(`decktext-${id}`).value;
+  const nameEl = document.getElementById(`deckname-${id}`);
+  const detected = getDeckName(text);
+  if (detected) nameEl.value = detected;
+}
+
+function removeDeck(id) {
+  const el = document.getElementById(`deck-${id}`);
+  if (el) el.remove();
+}
+
+function getDecks() {
+  const boxes = document.querySelectorAll(".deck-box");
+  return [...boxes].map(box => {
+    const id = box.id.replace("deck-", "");
+    const nameEl = document.getElementById(`deckname-${id}`);
+    const textEl = document.getElementById(`decktext-${id}`);
+    return {
+      name: nameEl?.value.trim() || `Deck ${id}`,
+      text: textEl?.value.trim() || ""
+    };
+  }).filter(d => d.text);
+}
+
+function parseDeckText(text) {
+  const cards = [];
+  const skip = /^(Name:|Hero:|Format:|Arena cards|Deck cards|Made with|See the full|^\s*$)/i;
+  for (const raw of text.trim().split("\n")) {
+    const line = raw.trim();
+    if (!line || skip.test(line)) continue;
+    const m = line.match(/^(\d+)x\s+(.+?)(?:\s*\((red|yellow|blue)\))?\s*$/i);
+    if (m) cards.push({ name: m[2].trim(), qty: parseInt(m[1]) });
+  }
+  return cards;
+}
+
+async function loadCardDb() {
+  if (cardDb) return cardDb;
+  const res = await fetch(CARD_JSON);
+  if (!res.ok) throw new Error(`Failed to load card database (${res.status}).`);
+  const data = await res.json();
+  cardDb = {};
+  for (const card of data) {
+    const name = (card.name || "").trim();
+    if (!name) continue;
+    // Store printings grouped by artist for lookup
+    const byArtist = {};
+    for (const printing of (card.printings || [])) {
+      const setCode = (printing.id || "").replace(/\d+$/, "").toUpperCase(); // e.g. "WTR" from "WTR032"
+      const printId = (printing.id || "").toUpperCase();
+      const edition = printing.edition || "";
+      for (const a of (printing.artists || [])) {
+        if (!a) continue;
+        const key = a.trim();
+        if (!byArtist[key]) byArtist[key] = [];
+        byArtist[key].push({ printId, setCode, edition });
+      }
+    }
+    cardDb[name.toLowerCase()] = { name, byArtist };
+  }
+  return cardDb;
+}
+
+function setStatus(msg) { document.getElementById("status").textContent = msg; }
+function setError(msg) {
+  document.getElementById("error").innerHTML = msg ? `<div class="error">${msg}</div>` : "";
+}
+
+async function run() {
+  setError("");
+  document.getElementById("results").innerHTML = "";
+
+  const artistUrl = document.getElementById("artistUrl").value.trim();
+  const artists = parseArtistsFromUrl(artistUrl);
+  const decks = getDecks();
+
+  if (!artistUrl)      { setError("Please enter the Fabrary artist cards URL."); return; }
+  if (!artists.length) { setError("Could not detect artist names from the URL."); return; }
+  if (!decks.length)   { setError("Please add at least one decklist."); return; }
+
+  const btn = document.getElementById("runBtn");
+  btn.disabled = true;
+
+  try {
+    setStatus("Loading card database...");
+    const db = await loadCardDb();
+    setStatus("Matching cards...");
+
+    const artistsLower = artists.map(a => a.toLowerCase());
+
+    // byArtist: { artistName: { deckName: [ {name, qty} ] } }
+    const byArtist = {};
+    const notInDb = new Set();
+
+    for (const deck of decks) {
+      const cards = parseDeckText(deck.text);
+      for (const { name, qty } of cards) {
+        const entry = db[name.toLowerCase()];
+        if (!entry) { notInDb.add(name); continue; }
+        const matched = Object.entries(entry.byArtist).filter(([a]) =>
+          artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
+        );
+        for (const [artistName, printings] of matched) {
+          const displayArtist = artists.find(a => {
+            const al = a.toLowerCase(), dbl = artistName.toLowerCase();
+            return dbl.includes(al) || al.includes(dbl);
+          }) || artistName;
+          if (!byArtist[displayArtist]) byArtist[displayArtist] = {};
+          if (!byArtist[displayArtist][deck.name]) byArtist[displayArtist][deck.name] = [];
+          const existing = byArtist[displayArtist][deck.name].find(c => c.name.toLowerCase() === name.toLowerCase());
+          if (existing) existing.qty += qty;
+          else byArtist[displayArtist][deck.name].push({ name: entry.name, qty, printings });
+        }
+      }
+    }
+
+    const output = Object.entries(byArtist)
+      .map(([artist, deckMap]) => ({ artist, deckMap }))
+      .sort((a, b) => a.artist.localeCompare(b.artist));
+
+    const matchedSet = new Set(output.map(r => r.artist));
+    const noMatches = artists.filter(a => !matchedSet.has(a));
+    const totalCards = output.reduce((s, r) =>
+      s + Object.values(r.deckMap).reduce((ds, cards) =>
+        ds + cards.reduce((cs, c) => cs + c.qty, 0), 0), 0);
+
+    render(output, noMatches, totalCards, [...notInDb], db, artists, decks);
+    setStatus("");
+  } catch (e) {
+    setError(e.message || "Something went wrong.");
+    setStatus("");
+  }
+  btn.disabled = false;
+}
+
+function render(output, noMatches, totalCards, notInDb, db, artists, decks) {
+  const el = document.getElementById("results");
+  const multiDeck = decks.length > 1;
+  let html = "";
+
+  if (output.length) {
+    const aWord = output.length === 1 ? "artist" : "artists";
+    const cWord = totalCards === 1 ? "card" : "cards";
+    html += `<p class="summary">${totalCards} ${cWord} to get signed across ${output.length} ${aWord}.</p>`;
+
+    for (const { artist, deckMap } of output) {
+      html += `<div class="artist-card"><div class="artist-name">${artist}</div>`;
+      for (const [deckName, cards] of Object.entries(deckMap)) {
+        html += `<div class="deck-section">`;
+        if (multiDeck) html += `<div class="deck-label">${deckName}</div>`;
+        for (const c of cards) {
+          const printTags = (c.printings || []).map(p => {
+            const label = p.edition ? `${p.setCode} ${p.edition}` : p.setCode;
+            return `<span class="print-tag">${label}</span>`;
+          }).join(" ");
+          html += `<div class="card-row"><span class="card-name-col">${c.name}${printTags ? `<span class="print-tags">${printTags}</span>` : ""}</span>${c.qty > 1 ? `<span class="qty">×${c.qty}</span>` : ""}</div>`;
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+    if (noMatches.length)
+      html += `<p class="no-match">No deck matches for: ${noMatches.join(", ")}</p>`;
+  } else {
+    html += `<p class="none-found">No matches found.</p>`;
+  }
+
+  // Debug
+  const debugParts = decks.map(deck => {
+    const cards = parseDeckText(deck.text);
+    const lines = cards.map(({ name }) => {
+      const entry = db[name.toLowerCase()];
+      if (!entry) return `✗ "${name}" — not in database`;
+      const artistsLower = artists.map(a => a.toLowerCase());
+      const matched = entry.artists.filter(a =>
+        artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
+      );
+      return `${matched.length ? "✓" : "–"} "${name}" — [${entry.artists.join(", ") || "none"}]${matched.length ? ` ← ${matched.join(", ")}` : ""}`;
+    }).join("\n");
+    return `=== ${deck.name} ===\n${lines}`;
+  }).join("\n\n");
+
+  html += `<details style="margin-top:1rem">
+    <summary>Show debug info</summary>
+    <div class="debug-box">Artists: ${artists.join(", ")}\n\n${debugParts}\n\nNot in database: ${notInDb.length ? notInDb.join(", ") : "none"}</div>
+  </details>`;
+
+  el.innerHTML = html;
+}
+
+// Start with one deck box
+addDeck();
+</script>
+</body>
+</html>
