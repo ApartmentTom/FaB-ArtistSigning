@@ -54,10 +54,26 @@
   <h1>FAB Signing Prep</h1>
 
   <div class="field">
+    <label for="eventSelect">Load a saved event</label>
+    <select id="eventSelect" style="width:100%;padding:8px 10px;font-size:14px;border:1px solid #d0d0cc;border-radius:8px;background:#fff;">
+      <option value="">— select an event —</option>
+    </select>
+    <div class="hint" id="eventHint"></div>
+  </div>
+
+  <div class="field">
     <label for="artistUrl">Artist cards URL (Fabrary)</label>
     <input type="text" id="artistUrl" placeholder='https://fabrary.net/cards?query=art%3A"Artist One"%2C"Artist Two"' />
     <div class="hint">Artists are detected automatically from the URL.</div>
     <div class="pills" id="artistPills"></div>
+  </div>
+
+  <div class="field">
+    <label for="branchSelect">Card database branch (the-fab-cube repo)</label>
+    <select id="branchSelect" style="width:100%;padding:8px 10px;font-size:14px;border:1px solid #d0d0cc;border-radius:8px;background:#fff;">
+      <option disabled selected value="">Loading branches...</option>
+    </select>
+    <div class="hint" id="branchHint">Fetching branch list from GitHub...</div>
   </div>
 
   <div class="field">
@@ -73,13 +89,111 @@
 </div>
 
 <script>
-const CARD_JSON = "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/develop/json/english/card.json";
+function getCardJsonUrl() {
+  var sel = document.getElementById("branchSelect");
+  var branch = sel.value || "develop";
+  return "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/" + branch + "/json/english/card.json";
+}
+
+async function loadBranches() {
+  var sel = document.getElementById("branchSelect");
+  sel.innerHTML = '<option disabled value="">Loading branches...</option>';
+  try {
+    // GitHub API returns branches sorted by name; we need to find most recently committed
+    var allBranches = [];
+    var page = 1;
+    while (true) {
+      var res = await fetch("https://api.github.com/repos/the-fab-cube/flesh-and-blood-cards/branches?per_page=100&page=" + page);
+      if (!res.ok) throw new Error("GitHub API error " + res.status);
+      var data = await res.json();
+      if (!data.length) break;
+      allBranches = allBranches.concat(data);
+      if (data.length < 100) break;
+      page++;
+    }
+
+    // Fetch commit dates for each branch in parallel
+    var withDates = await Promise.all(allBranches.map(async function(b) {
+      try {
+        var r = await fetch("https://api.github.com/repos/the-fab-cube/flesh-and-blood-cards/commits/" + encodeURIComponent(b.commit.sha));
+        var d = await r.json();
+        var date = d.commit && d.commit.committer && d.commit.committer.date ? d.commit.committer.date : "0";
+        return { name: b.name, date: date };
+      } catch(e) {
+        return { name: b.name, date: "0" };
+      }
+    }));
+
+    // Sort most recent first
+    withDates.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+    sel.innerHTML = "";
+    withDates.forEach(function(b, i) {
+      var opt = document.createElement("option");
+      opt.value = b.name;
+      var dateStr = b.date !== "0" ? " (" + b.date.slice(0, 10) + ")" : "";
+      opt.textContent = b.name + dateStr;
+      if (i === 0) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    document.getElementById("branchHint").textContent = "Sorted by most recently updated. Selected: " + withDates[0].name;
+  } catch(e) {
+    // Fallback to static options
+    sel.innerHTML = '<option value="develop" selected>develop</option><option value="main">main</option>';
+    document.getElementById("branchHint").textContent = "Could not load branches from GitHub API — using defaults.";
+  }
+}
 let cardDb = null;
 let deckCount = 0;
 
+document.getElementById("eventSelect").addEventListener("change", onEventSelect);
 document.getElementById("artistUrl").addEventListener("input", detectArtists);
+document.getElementById("branchSelect").addEventListener("change", function() { cardDb = null; });
 document.getElementById("addDeckBtn").addEventListener("click", function() { addDeck(); });
 document.getElementById("runBtn").addEventListener("click", run);
+loadBranches();
+loadEvents();
+
+async function loadEvents() {
+  var sel = document.getElementById("eventSelect");
+  var hint = document.getElementById("eventHint");
+  try {
+    var res = await fetch("events.json?nocache=" + Date.now());
+    if (!res.ok) throw new Error();
+    var events = await res.json();
+    events.forEach(function(ev) {
+      var opt = document.createElement("option");
+      opt.value = ev.artistUrl;
+      var label = ev.name;
+      if (ev.date) label += " — " + ev.date;
+      if (ev.location) label += " · " + ev.location;
+      opt.textContent = label;
+      opt.dataset.name = ev.name;
+      opt.dataset.date = ev.date || "";
+      opt.dataset.location = ev.location || "";
+      sel.appendChild(opt);
+    });
+    if (events.length === 0) hint.textContent = "No events found in events.json.";
+  } catch(e) {
+    hint.textContent = "Could not load events.json — add it to your repo to use this feature.";
+  }
+}
+
+function onEventSelect() {
+  var sel = document.getElementById("eventSelect");
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  var urlInput = document.getElementById("artistUrl");
+  urlInput.value = opt.value;
+  detectArtists();
+  var hint = document.getElementById("eventHint");
+  var parts = [];
+  if (opt.dataset.date) parts.push(opt.dataset.date);
+  if (opt.dataset.location) parts.push(opt.dataset.location);
+  hint.textContent = parts.join(" · ");
+  cardDb = null;
+}
 
 function detectArtists() {
   const url = document.getElementById("artistUrl").value;
@@ -185,11 +299,13 @@ function parseDeckText(text) {
 }
 
 async function loadCardDb() {
-  if (cardDb) return cardDb;
-  var res = await fetch(CARD_JSON);
+  if (cardDb && cardDb._branch === getCardJsonUrl()) return cardDb;
+  var url = getCardJsonUrl();
+  var res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load card database (" + res.status + ").");
   var data = await res.json();
   cardDb = {};
+  cardDb._branch = url;
   for (var i = 0; i < data.length; i++) {
     var card = data[i];
     var name = (card.name || "").trim();
