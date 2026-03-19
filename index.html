@@ -11,22 +11,22 @@
   h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.75rem; }
   label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
   .hint { font-size: 12px; color: #999; margin-top: 4px; }
-  input[type=text], textarea { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #d0d0cc; border-radius: 8px; background: #fff; outline: none; font-family: inherit; }
+  input[type=text], textarea { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #d0d0cc; border-radius: 8px; background: #fff; outline: none; font-family: inherit; color: #1a1a18; }
   input[type=text]:focus, textarea:focus { border-color: #888; }
   textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
   .field { margin-bottom: 1.25rem; }
-  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .pill { font-size: 12px; padding: 3px 10px; background: #ebebeb; color: #555; border-radius: 20px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 0; }
+  .pill { font-size: 12px; padding: 3px 10px; background: #ebebeb; color: #555; border-radius: 20px; white-space: nowrap; }
   .deck-box { border: 1px solid #e0e0dc; border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; background: #fff; }
   .deck-box-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .deck-box-header input[type=text] { flex: 1; font-size: 13px; padding: 5px 10px; }
   .remove-btn { padding: 4px 10px; font-size: 13px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: #999; flex-shrink: 0; }
   .remove-btn:hover { background: #fdecea; color: #a33; border-color: #f0c0bc; }
-  .add-btn { font-size: 13px; padding: 6px 14px; border: 1px dashed #bbb; border-radius: 8px; background: transparent; cursor: pointer; color: #666; margin-bottom: 1.25rem; }
+  .add-btn { font-size: 13px; padding: 6px 14px; border: 1px dashed #bbb; border-radius: 8px; background: transparent; cursor: pointer; color: #666; margin-bottom: 1.25rem; display: inline-block; }
   .add-btn:hover { background: #f0f0ee; }
-  button#runBtn { padding: 8px 22px; font-size: 14px; border: 1px solid #bbb; border-radius: 8px; background: #fff; cursor: pointer; }
-  button#runBtn:hover { background: #f0f0ee; }
-  button#runBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #runBtn { padding: 8px 22px; font-size: 14px; border: 1px solid #bbb; border-radius: 8px; background: #fff; cursor: pointer; }
+  #runBtn:hover { background: #f0f0ee; }
+  #runBtn:disabled { opacity: 0.5; cursor: not-allowed; }
   .status { margin-top: 1rem; font-size: 13px; color: #888; min-height: 18px; }
   .error { margin-top: 1rem; padding: 10px 14px; background: #fdecea; color: #a33; border-radius: 8px; font-size: 13px; line-height: 1.5; }
   .results { margin-top: 1.5rem; }
@@ -35,13 +35,13 @@
   .artist-name { font-weight: 500; font-size: 15px; margin-bottom: 10px; }
   .deck-section { margin-bottom: 10px; }
   .deck-section:last-child { margin-bottom: 0; }
-  .deck-label { font-size: 12px; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .deck-label { font-size: 11px; color: #999; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .card-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 14px; padding: 4px 0; border-top: 1px solid #f2f2f0; gap: 8px; }
   .card-row:first-of-type { border-top: none; }
-  .card-name-col { display: flex; flex-direction: column; gap: 3px; }
+  .card-name-col { display: flex; flex-direction: column; gap: 3px; flex: 1; }
   .print-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-  .print-tag { font-size: 11px; background: #eef0f8; color: #557; padding: 1px 7px; border-radius: 4px; }
-  .qty { font-size: 12px; background: #f0f0ee; color: #666; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+  .print-tag { font-size: 11px; background: #eef0f8; color: #446; padding: 1px 7px; border-radius: 4px; }
+  .qty { font-size: 12px; background: #f0f0ee; color: #666; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; }
   .no-match { font-size: 12px; color: #aaa; margin-top: 0.5rem; }
   .none-found { font-size: 14px; color: #888; }
   details { margin-top: 1rem; }
@@ -54,21 +54,22 @@
   <h1>FAB Signing Prep</h1>
 
   <div class="field">
-    <label>Artist cards URL (Fabrary)</label>
-    <input type="text" id="artistUrl" placeholder='https://fabrary.net/cards?query=art%3A"Artist One"%2C"Artist Two"' oninput="detectArtists()" />
+    <label for="artistUrl">Artist cards URL (Fabrary)</label>
+    <input type="text" id="artistUrl" placeholder='https://fabrary.net/cards?query=art%3A"Artist One"%2C"Artist Two"' />
     <div class="hint">Artists are detected automatically from the URL.</div>
     <div class="pills" id="artistPills"></div>
   </div>
 
-  <label style="margin-bottom:8px;">Decklists — paste from Fabrary export</label>
-  <div id="deckList"></div>
-  <button class="add-btn" onclick="addDeck()">+ Add deck</button>
+  <div class="field">
+    <label>Decklists — paste from Fabrary export</label>
+    <div id="deckList"></div>
+    <button class="add-btn" id="addDeckBtn">+ Add deck</button>
+  </div>
 
-  <br>
-  <button id="runBtn" onclick="run()">Find signable cards</button>
+  <button id="runBtn">Find signable cards</button>
   <div class="status" id="status"></div>
   <div id="error"></div>
-  <div class="results" id="results"></div>
+  <div id="results"></div>
 </div>
 
 <script>
@@ -76,172 +77,226 @@ const CARD_JSON = "https://raw.githubusercontent.com/the-fab-cube/flesh-and-bloo
 let cardDb = null;
 let deckCount = 0;
 
+document.getElementById("artistUrl").addEventListener("input", detectArtists);
+document.getElementById("addDeckBtn").addEventListener("click", function() { addDeck(); });
+document.getElementById("runBtn").addEventListener("click", run);
+
 function detectArtists() {
   const url = document.getElementById("artistUrl").value;
-  document.getElementById("artistPills").innerHTML =
-    parseArtistsFromUrl(url).map(a => `<span class="pill">${a}</span>`).join("");
+  const artists = parseArtistsFromUrl(url);
+  const pills = document.getElementById("artistPills");
+  pills.innerHTML = artists.map(function(a) {
+    return '<span class="pill">' + escHtml(a) + '</span>';
+  }).join("");
 }
 
 function parseArtistsFromUrl(url) {
   try {
-    const match = url.match(/art(?::|%3A)(.+?)(?:&|$)/i);
+    var match = url.match(/art(?::|%3A)(.+?)(?:&|$)/i);
     if (!match) return [];
-    const raw = decodeURIComponent(match[1]).replace(/\+/g, " ");
-    return raw.split(",").map(a => a.replace(/"/g, "").trim()).filter(Boolean);
-  } catch { return []; }
+    var raw = decodeURIComponent(match[1]).replace(/\+/g, " ");
+    return raw.split(",").map(function(a) { return a.replace(/"/g, "").trim(); }).filter(Boolean);
+  } catch(e) { return []; }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 function getDeckName(text) {
-  const m = text.match(/^Name:\s*(.+)$/m);
+  var m = text.match(/^Name:\s*(.+)$/m);
   return m ? m[1].trim() : "";
 }
 
-function addDeck(text = "") {
+function addDeck(text) {
+  text = text || "";
   deckCount++;
-  const id = deckCount;
-  const div = document.createElement("div");
+  var id = deckCount;
+  var div = document.createElement("div");
   div.className = "deck-box";
-  div.id = `deck-${id}`;
-  div.innerHTML = `
-    <div class="deck-box-header">
-      <input type="text" placeholder="Deck name (auto-filled from export)" id="deckname-${id}" />
-      <button class="remove-btn" onclick="removeDeck(${id})">Remove</button>
-    </div>
-    <textarea id="decktext-${id}" placeholder="Paste Fabrary export here..." oninput="autoName(${id})">${text}</textarea>`;
+  div.id = "deck-" + id;
+
+  var header = document.createElement("div");
+  header.className = "deck-box-header";
+
+  var nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.id = "deckname-" + id;
+  nameInput.placeholder = "Deck name (auto-filled from export)";
+
+  var removeBtn = document.createElement("button");
+  removeBtn.className = "remove-btn";
+  removeBtn.textContent = "Remove";
+  removeBtn.addEventListener("click", function() { removeDeck(id); });
+
+  header.appendChild(nameInput);
+  header.appendChild(removeBtn);
+
+  var ta = document.createElement("textarea");
+  ta.id = "decktext-" + id;
+  ta.placeholder = "Paste Fabrary export here...";
+  ta.addEventListener("input", function() { autoName(id); });
+  if (text) { ta.value = text; }
+
+  div.appendChild(header);
+  div.appendChild(ta);
   document.getElementById("deckList").appendChild(div);
   if (text) autoName(id);
 }
 
 function autoName(id) {
-  const text = document.getElementById(`decktext-${id}`).value;
-  const nameEl = document.getElementById(`deckname-${id}`);
-  const detected = getDeckName(text);
-  if (detected) nameEl.value = detected;
+  var text = document.getElementById("decktext-" + id).value;
+  var nameEl = document.getElementById("deckname-" + id);
+  var detected = getDeckName(text);
+  if (detected && !nameEl.dataset.userEdited) nameEl.value = detected;
 }
 
 function removeDeck(id) {
-  const el = document.getElementById(`deck-${id}`);
+  var el = document.getElementById("deck-" + id);
   if (el) el.remove();
 }
 
 function getDecks() {
-  const boxes = document.querySelectorAll(".deck-box");
-  return [...boxes].map(box => {
-    const id = box.id.replace("deck-", "");
-    const nameEl = document.getElementById(`deckname-${id}`);
-    const textEl = document.getElementById(`decktext-${id}`);
-    return {
-      name: nameEl?.value.trim() || `Deck ${id}`,
-      text: textEl?.value.trim() || ""
-    };
-  }).filter(d => d.text);
+  var boxes = document.querySelectorAll(".deck-box");
+  var decks = [];
+  boxes.forEach(function(box) {
+    var id = box.id.replace("deck-", "");
+    var nameEl = document.getElementById("deckname-" + id);
+    var textEl = document.getElementById("decktext-" + id);
+    var text = textEl ? textEl.value.trim() : "";
+    if (text) {
+      decks.push({ name: (nameEl && nameEl.value.trim()) || ("Deck " + id), text: text });
+    }
+  });
+  return decks;
 }
 
 function parseDeckText(text) {
-  const cards = [];
-  const skip = /^(Name:|Hero:|Format:|Arena cards|Deck cards|Made with|See the full|^\s*$)/i;
-  for (const raw of text.trim().split("\n")) {
-    const line = raw.trim();
+  var cards = [];
+  var skip = /^(Name:|Hero:|Format:|Arena cards|Deck cards|Made with|See the full)/i;
+  var lines = text.trim().split("\n");
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
     if (!line || skip.test(line)) continue;
-    const m = line.match(/^(\d+)x\s+(.+?)(?:\s*\((red|yellow|blue)\))?\s*$/i);
-    if (m) cards.push({ name: m[2].trim(), qty: parseInt(m[1]) });
+    var m = line.match(/^(\d+)x\s+(.+?)(?:\s*\((red|yellow|blue)\))?\s*$/i);
+    if (m) cards.push({ name: m[2].trim(), qty: parseInt(m[1], 10) });
   }
   return cards;
 }
 
 async function loadCardDb() {
   if (cardDb) return cardDb;
-  const res = await fetch(CARD_JSON);
-  if (!res.ok) throw new Error(`Failed to load card database (${res.status}).`);
-  const data = await res.json();
+  var res = await fetch(CARD_JSON);
+  if (!res.ok) throw new Error("Failed to load card database (" + res.status + ").");
+  var data = await res.json();
   cardDb = {};
-  for (const card of data) {
-    const name = (card.name || "").trim();
+  for (var i = 0; i < data.length; i++) {
+    var card = data[i];
+    var name = (card.name || "").trim();
     if (!name) continue;
-    // Store printings grouped by artist for lookup
-    const byArtist = {};
-    for (const printing of (card.printings || [])) {
-      const setCode = (printing.id || "").replace(/\d+$/, "").toUpperCase(); // e.g. "WTR" from "WTR032"
-      const printId = (printing.id || "").toUpperCase();
-      const edition = printing.edition || "";
-      for (const a of (printing.artists || [])) {
+    var byArtist = {};
+    var printings = card.printings || [];
+    for (var j = 0; j < printings.length; j++) {
+      var printing = printings[j];
+      var printId = (printing.id || "").toUpperCase();
+      var setCode = printId.replace(/\d+$/, "");
+      var edition = printing.edition || "";
+      var artists = printing.artists || [];
+      for (var k = 0; k < artists.length; k++) {
+        var a = (artists[k] || "").trim();
         if (!a) continue;
-        const key = a.trim();
-        if (!byArtist[key]) byArtist[key] = [];
-        byArtist[key].push({ printId, setCode, edition });
+        if (!byArtist[a]) byArtist[a] = [];
+        byArtist[a].push({ printId: printId, setCode: setCode, edition: edition });
       }
     }
-    cardDb[name.toLowerCase()] = { name, byArtist };
+    cardDb[name.toLowerCase()] = { name: name, byArtist: byArtist };
   }
   return cardDb;
 }
 
 function setStatus(msg) { document.getElementById("status").textContent = msg; }
 function setError(msg) {
-  document.getElementById("error").innerHTML = msg ? `<div class="error">${msg}</div>` : "";
+  document.getElementById("error").innerHTML = msg ? '<div class="error">' + escHtml(msg) + '</div>' : "";
 }
 
 async function run() {
   setError("");
   document.getElementById("results").innerHTML = "";
 
-  const artistUrl = document.getElementById("artistUrl").value.trim();
-  const artists = parseArtistsFromUrl(artistUrl);
-  const decks = getDecks();
+  var artistUrl = document.getElementById("artistUrl").value.trim();
+  var artists = parseArtistsFromUrl(artistUrl);
+  var decks = getDecks();
 
   if (!artistUrl)      { setError("Please enter the Fabrary artist cards URL."); return; }
   if (!artists.length) { setError("Could not detect artist names from the URL."); return; }
   if (!decks.length)   { setError("Please add at least one decklist."); return; }
 
-  const btn = document.getElementById("runBtn");
+  var btn = document.getElementById("runBtn");
   btn.disabled = true;
 
   try {
     setStatus("Loading card database...");
-    const db = await loadCardDb();
+    var db = await loadCardDb();
     setStatus("Matching cards...");
 
-    const artistsLower = artists.map(a => a.toLowerCase());
+    var artistsLower = artists.map(function(a) { return a.toLowerCase(); });
+    var byArtist = {};
+    var notInDb = new Set();
 
-    // byArtist: { artistName: { deckName: [ {name, qty} ] } }
-    const byArtist = {};
-    const notInDb = new Set();
+    for (var di = 0; di < decks.length; di++) {
+      var deck = decks[di];
+      var cards = parseDeckText(deck.text);
+      for (var ci = 0; ci < cards.length; ci++) {
+        var cardName = cards[ci].name;
+        var qty = cards[ci].qty;
+        var entry = db[cardName.toLowerCase()];
+        if (!entry || !entry.byArtist) { notInDb.add(cardName); continue; }
 
-    for (const deck of decks) {
-      const cards = parseDeckText(deck.text);
-      for (const { name, qty } of cards) {
-        const entry = db[name.toLowerCase()];
-        if (!entry || !entry.byArtist) { notInDb.add(name); continue; }
-        const matched = Object.entries(entry.byArtist).filter(([a]) =>
-          artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
-        );
-        for (const [artistName, printings] of matched) {
-          const displayArtist = artists.find(a => {
-            const al = a.toLowerCase(), dbl = artistName.toLowerCase();
-            return dbl.includes(al) || al.includes(dbl);
-          }) || artistName;
+        var entryArtists = Object.keys(entry.byArtist);
+        for (var ai = 0; ai < entryArtists.length; ai++) {
+          var dbArtist = entryArtists[ai];
+          var dbArtistL = dbArtist.toLowerCase();
+          var isMatch = artistsLower.some(function(ea) {
+            return dbArtistL.includes(ea) || ea.includes(dbArtistL);
+          });
+          if (!isMatch) continue;
+
+          var displayArtist = artists.find(function(a) {
+            var al = a.toLowerCase();
+            return dbArtistL.includes(al) || al.includes(dbArtistL);
+          }) || dbArtist;
+
           if (!byArtist[displayArtist]) byArtist[displayArtist] = {};
           if (!byArtist[displayArtist][deck.name]) byArtist[displayArtist][deck.name] = [];
-          const existing = byArtist[displayArtist][deck.name].find(c => c.name.toLowerCase() === name.toLowerCase());
-          if (existing) existing.qty += qty;
-          else byArtist[displayArtist][deck.name].push({ name: entry.name, qty, printings });
+
+          var printings = entry.byArtist[dbArtist];
+          var existing = byArtist[displayArtist][deck.name].find(function(c) {
+            return c.name.toLowerCase() === cardName.toLowerCase();
+          });
+          if (existing) {
+            existing.qty += qty;
+          } else {
+            byArtist[displayArtist][deck.name].push({ name: entry.name, qty: qty, printings: printings });
+          }
         }
       }
     }
 
-    const output = Object.entries(byArtist)
-      .map(([artist, deckMap]) => ({ artist, deckMap }))
-      .sort((a, b) => a.artist.localeCompare(b.artist));
+    var output = Object.keys(byArtist).sort().map(function(artist) {
+      return { artist: artist, deckMap: byArtist[artist] };
+    });
 
-    const matchedSet = new Set(output.map(r => r.artist));
-    const noMatches = artists.filter(a => !matchedSet.has(a));
-    const totalCards = output.reduce((s, r) =>
-      s + Object.values(r.deckMap).reduce((ds, cards) =>
-        ds + cards.reduce((cs, c) => cs + c.qty, 0), 0), 0);
+    var matchedSet = new Set(output.map(function(r) { return r.artist; }));
+    var noMatches = artists.filter(function(a) { return !matchedSet.has(a); });
+    var totalCards = output.reduce(function(s, r) {
+      return s + Object.values(r.deckMap).reduce(function(ds, cards) {
+        return ds + cards.reduce(function(cs, c) { return cs + c.qty; }, 0);
+      }, 0);
+    }, 0);
 
-    render(output, noMatches, totalCards, [...notInDb], db, artists, decks);
+    render(output, noMatches, totalCards, Array.from(notInDb), db, artists, decks);
     setStatus("");
-  } catch (e) {
+  } catch(e) {
     setError(e.message || "Something went wrong.");
     setStatus("");
   }
@@ -249,61 +304,72 @@ async function run() {
 }
 
 function render(output, noMatches, totalCards, notInDb, db, artists, decks) {
-  const el = document.getElementById("results");
-  const multiDeck = decks.length > 1;
-  let html = "";
+  var el = document.getElementById("results");
+  var multiDeck = decks.length > 1;
+  var html = "";
 
   if (output.length) {
-    const aWord = output.length === 1 ? "artist" : "artists";
-    const cWord = totalCards === 1 ? "card" : "cards";
-    html += `<p class="summary">${totalCards} ${cWord} to get signed across ${output.length} ${aWord}.</p>`;
+    var aWord = output.length === 1 ? "artist" : "artists";
+    var cWord = totalCards === 1 ? "card" : "cards";
+    html += '<p class="summary">' + totalCards + ' ' + cWord + ' to get signed across ' + output.length + ' ' + aWord + '.</p>';
 
-    for (const { artist, deckMap } of output) {
-      html += `<div class="artist-card"><div class="artist-name">${artist}</div>`;
-      for (const [deckName, cards] of Object.entries(deckMap)) {
-        html += `<div class="deck-section">`;
-        if (multiDeck) html += `<div class="deck-label">${deckName}</div>`;
-        for (const c of cards) {
-          const printTags = (c.printings || []).map(p => {
-            const label = p.edition ? `${p.setCode} ${p.edition}` : p.setCode;
-            return `<span class="print-tag">${label}</span>`;
-          }).join(" ");
-          html += `<div class="card-row"><span class="card-name-col">${c.name}${printTags ? `<span class="print-tags">${printTags}</span>` : ""}</span>${c.qty > 1 ? `<span class="qty">×${c.qty}</span>` : ""}</div>`;
+    for (var oi = 0; oi < output.length; oi++) {
+      var r = output[oi];
+      html += '<div class="artist-card"><div class="artist-name">' + escHtml(r.artist) + '</div>';
+      var deckNames = Object.keys(r.deckMap);
+      for (var di = 0; di < deckNames.length; di++) {
+        var deckName = deckNames[di];
+        var cards = r.deckMap[deckName];
+        html += '<div class="deck-section">';
+        if (multiDeck) html += '<div class="deck-label">' + escHtml(deckName) + '</div>';
+        for (var ci = 0; ci < cards.length; ci++) {
+          var c = cards[ci];
+          var printTags = (c.printings || []).map(function(p) {
+            var label = p.edition ? p.setCode + ' ' + p.edition : p.setCode;
+            return '<span class="print-tag">' + escHtml(label) + '</span>';
+          }).join("");
+          html += '<div class="card-row">';
+          html += '<span class="card-name-col">' + escHtml(c.name);
+          if (printTags) html += '<span class="print-tags">' + printTags + '</span>';
+          html += '</span>';
+          if (c.qty > 1) html += '<span class="qty">×' + c.qty + '</span>';
+          html += '</div>';
         }
-        html += `</div>`;
+        html += '</div>';
       }
-      html += `</div>`;
+      html += '</div>';
     }
+
     if (noMatches.length)
-      html += `<p class="no-match">No deck matches for: ${noMatches.join(", ")}</p>`;
+      html += '<p class="no-match">No deck matches for: ' + noMatches.map(escHtml).join(", ") + '</p>';
   } else {
-    html += `<p class="none-found">No matches found.</p>`;
+    html += '<p class="none-found">No matches found.</p>';
   }
 
-  // Debug
-  const debugParts = decks.map(deck => {
-    const cards = parseDeckText(deck.text);
-    const lines = cards.map(({ name }) => {
-      const entry = db[name.toLowerCase()];
-      if (!entry || !entry.byArtist) return `✗ "${name}" — not in database`;
-      const artistsLower = artists.map(a => a.toLowerCase());
-      const matched = entry.artists.filter(a =>
-        artistsLower.some(ea => a.toLowerCase().includes(ea) || ea.includes(a.toLowerCase()))
-      );
-      return `${matched.length ? "✓" : "–"} "${name}" — [${entry.artists.join(", ") || "none"}]${matched.length ? ` ← ${matched.join(", ")}` : ""}`;
-    }).join("\n");
-    return `=== ${deck.name} ===\n${lines}`;
+  // Debug section
+  var artistsLower = artists.map(function(a) { return a.toLowerCase(); });
+  var debugParts = decks.map(function(deck) {
+    var cards = parseDeckText(deck.text);
+    var lines = cards.map(function(card) {
+      var entry = db[card.name.toLowerCase()];
+      if (!entry || !entry.byArtist) return '✗ "' + card.name + '" — not in database';
+      var dbArtists = Object.keys(entry.byArtist);
+      var matched = dbArtists.filter(function(a) {
+        var al = a.toLowerCase();
+        return artistsLower.some(function(ea) { return al.includes(ea) || ea.includes(al); });
+      });
+      return (matched.length ? "✓" : "–") + ' "' + card.name + '" — [' + dbArtists.join(", ") + ']' + (matched.length ? ' ← ' + matched.join(", ") : "");
+    });
+    return "=== " + deck.name + " ===\n" + lines.join("\n");
   }).join("\n\n");
 
-  html += `<details style="margin-top:1rem">
-    <summary>Show debug info</summary>
-    <div class="debug-box">Artists: ${artists.join(", ")}\n\n${debugParts}\n\nNot in database: ${notInDb.length ? notInDb.join(", ") : "none"}</div>
-  </details>`;
+  html += '<details style="margin-top:1rem"><summary>Show debug info</summary>';
+  html += '<div class="debug-box">Artists: ' + escHtml(artists.join(", ")) + '\n\n' + debugParts + '\n\nNot in database: ' + (notInDb.length ? notInDb.map(escHtml).join(", ") : "none") + '</div></details>';
 
   el.innerHTML = html;
 }
 
-// Start with one deck box
+// Initialise with one deck
 addDeck();
 </script>
 </body>
